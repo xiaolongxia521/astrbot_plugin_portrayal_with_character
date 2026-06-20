@@ -25,7 +25,7 @@ class LLMService:
         umo: str | None = None,
     ) -> str:
         """
-        生成用户画像分析文本
+        生成用户画像分析文本（第一步：客观分析）
         """
         system_prompt = system_prompt_template.format(nickname=profile.nickname)
         prompt = self._build_portrait_prompt(texts, profile)
@@ -39,6 +39,34 @@ class LLMService:
         )
         if not resp:
             raise RuntimeError("LLM 响应为空")
+        return resp
+
+    async def rephrase_with_persona(
+        self,
+        raw_analysis: str,
+        persona_prompt: str,
+        profile: UserProfile,
+        *,
+        umo: str | None = None,
+    ) -> str:
+        """
+        用选定人格风格复述画像分析结果（第二步：风格化复述）
+        """
+        prompt = (
+            f"请用你的说话风格，重新表达以下人物分析内容。"
+            f"保留所有分析要点和结论，但语气、用词、表达方式应符合你的性格设定：\n\n"
+            f"{raw_analysis}"
+        )
+
+        resp = await self._call_llm(
+            system_prompt=persona_prompt,
+            prompt=prompt,
+            profile=profile,
+            retry_times=self.cfg.llm.retry_times,
+            umo=umo,
+        )
+        if not resp:
+            raise RuntimeError("LLM 复述响应为空")
         return resp
 
     def _build_portrait_prompt(

@@ -20,6 +20,19 @@
                     "step": 1
                 },
                 "default": 2
+            },
+            "preserve_persona_style": {
+                "description": "用人格风格复述画像",
+                "type": "bool",
+                "hint": "开启后，先用默认方式分析画像，再让选定的人格以其说话风格复述分析结果。克隆人格命令不受此影响",
+                "default": false
+            },
+            "persona_id": {
+                "description": "用于复述的人格",
+                "type": "string",
+                "hint": "选择一个人格，画像分析结果将用该人格的说话风格复述。仅在\"用人格风格复述画像\"开启时生效",
+                "default": "",
+                "_special": "select_persona"
             }
         }
     },

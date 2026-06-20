@@ -134,7 +134,7 @@ class PortrayalPlugin(Star):
                 f"{result.count}条{profile.nickname}的聊天记录，正在{cmd}..."
             )
 
-        # LLM 分析画像
+        # LLM 分析画像（第一步：客观分析）
         try:
             content = await self.llm.generate_portrait(
                 result.texts,
@@ -146,6 +146,27 @@ class PortrayalPlugin(Star):
             logger.error(f"LLM 调用失败：{e}")
             yield event.plain_result(f"分析失败：{e}")
             return
+
+        # 第二步：用人格风格复述（仅非克隆命令且开关开启时）
+        if not is_clone and self.cfg.llm.preserve_persona_style:
+            persona_id = self.cfg.llm.persona_id
+            if persona_id:
+                try:
+                    persona = await self.context.persona_manager.get_persona(persona_id)
+                    content = await self.llm.rephrase_with_persona(
+                        raw_analysis=content,
+                        persona_prompt=persona.system_prompt,
+                        profile=profile,
+                        umo=event.unified_msg_origin,
+                    )
+                except ValueError:
+                    logger.warning(
+                        f"配置的人格 '{persona_id}' 不存在，跳过风格复述"
+                    )
+                except Exception as e:
+                    logger.warning(f"人格风格复述失败，使用原始分析结果：{e}")
+            else:
+                logger.warning("人格风格复述已开启，但未配置人格ID，跳过复述")
 
         # 保存克隆人格并发送
         if is_clone:

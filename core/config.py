@@ -125,6 +125,8 @@ class PromptEntry(ConfigNode):
 class LLMConfig(ConfigNode):
     provider_id: str
     retry_times: int
+    preserve_persona_style: bool
+    persona_id: str
 
 
 class MessageConfig(ConfigNode):
